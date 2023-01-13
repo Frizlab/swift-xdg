@@ -39,9 +39,6 @@ public struct BaseDirectories : Sendable {
 	
 	public let fileManager: FileManager
 	
-	public let sharedPrefix: FilePath
-	public let   userPrefix: FilePath
-	
 	public let   dataHome: FilePath
 	public let configHome: FilePath
 	public let  cacheHome: FilePath
@@ -58,6 +55,20 @@ public struct BaseDirectories : Sendable {
 	 This is always `~/.local/bin`. */
 	public let binDir: Result<FilePath, XDGError>
 	
+	/* Both these variables are included “for information” because we compute the prefixed path directly in the init and do not need the prefixes later. */
+	public let prefixAll:  FilePath /* Including for a user path: this prefix _then_ the user prefix should be added for a user path. */
+	public let prefixUser: FilePath
+	
+	public let   dataHomePrefixed: FilePath
+	public let configHomePrefixed: FilePath
+	public let  cacheHomePrefixed: FilePath
+	public let  stateHomePrefixed: FilePath
+	
+	public let   dataDirsPrefixed: [FilePath]
+	public let configDirsPrefixed: [FilePath]
+	
+	public let runtimeDirPrefixed: Result<FilePath, XDGError.RuntimeDirError>
+	
 	/**
 	 Init a `BaseDirectories` instance by reading the environment variables and setting the different path according to the specifications.
 	 
@@ -66,12 +77,12 @@ public struct BaseDirectories : Sendable {
 	 
 	 For example:
 	 ```swift
-	 let dirs = try BaseDirectories(prefix: "program-name", profile: "profile-name")
+	 let dirs = try BaseDirectories(prefixAll: "program-name", prefixUser: "profile-name")
 	 dirs.findDataFile("bar.jpg")
 	 dirs.findConfigFile("foo.conf")
 	 ```
-	 will find `/usr/share/program-name/bar.jpg` (without `profile-name`) and and `~/.config/program-name/profile-name/foo.conf`. */
-	public init(prefix: FilePath = "", profile: FilePath = "", runtimeDirHandling: RuntimeDirHandling = .default, fileManager: FileManager = .default) throws {
+	 will find `/usr/share/program-name/bar.jpg` (without `profile-name`) and `~/.config/program-name/profile-name/foo.conf`. */
+	public init(prefixAll: FilePath = "", prefixUser: FilePath = "", runtimeDirHandling: RuntimeDirHandling = .default, fileManager: FileManager = .default) throws {
 		let home: Result<FilePath, XDGError> = {
 #if !os(tvOS) && !os(iOS) && !os(watchOS)
 			guard let ret = FilePath(urlForceLocalImplementation: fileManager.homeDirectoryForCurrentUser) else {
@@ -85,16 +96,22 @@ public struct BaseDirectories : Sendable {
 		
 		self.fileManager = fileManager
 		
-		self.sharedPrefix = prefix
-		self.userPrefix   = prefix.appending(profile.components)
+		self.prefixAll  = prefixAll
+		self.prefixUser = prefixUser
 		
-		self.dataHome   = try (Self.absolutePath(from: "XDG_DATA_HOME")   ?? home.get().appending(".local/share")).lexicallyNormalized()
-		self.configHome = try (Self.absolutePath(from: "XDG_CONFIG_HOME") ?? home.get().appending(".config")     ).lexicallyNormalized()
-		self.cacheHome  = try (Self.absolutePath(from: "XDG_CACHE_HOME")  ?? home.get().appending(".cache")      ).lexicallyNormalized()
-		self.stateHome  = try (Self.absolutePath(from: "XDG_STATE_HOME")  ?? home.get().appending(".local/state")).lexicallyNormalized()
+		self.dataHome   = try (Self.absolutePath(from: "XDG_DATA_HOME")   ?? home.get().appending(".local/share"))
+		self.configHome = try (Self.absolutePath(from: "XDG_CONFIG_HOME") ?? home.get().appending(".config")     )
+		self.cacheHome  = try (Self.absolutePath(from: "XDG_CACHE_HOME")  ?? home.get().appending(".cache")      )
+		self.stateHome  = try (Self.absolutePath(from: "XDG_STATE_HOME")  ?? home.get().appending(".local/state"))
+		self.dataHomePrefixed   = try   dataHome.lexicallyResolving(prefixAll).lexicallyResolving(prefixUser).lexicallyNormalized()
+		self.configHomePrefixed = try configHome.lexicallyResolving(prefixAll).lexicallyResolving(prefixUser).lexicallyNormalized()
+		self.cacheHomePrefixed  = try  cacheHome.lexicallyResolving(prefixAll).lexicallyResolving(prefixUser).lexicallyNormalized()
+		self.stateHomePrefixed  = try  stateHome.lexicallyResolving(prefixAll).lexicallyResolving(prefixUser).lexicallyNormalized()
 		
-		self.dataDirs   = (Self.absolutePaths(from: "XDG_DATA_DIRS")   ?? [FilePath("/usr/local/share"), FilePath("/usr/share")]).map{ $0.lexicallyNormalized() }
-		self.configDirs = (Self.absolutePaths(from: "XDG_CONFIG_DIRS") ?? [FilePath("/etc/xdg")]                                ).map{ $0.lexicallyNormalized() }
+		self.dataDirs   = (Self.absolutePaths(from: "XDG_DATA_DIRS")   ?? [FilePath("/usr/local/share"), FilePath("/usr/share")])
+		self.configDirs = (Self.absolutePaths(from: "XDG_CONFIG_DIRS") ?? [FilePath("/etc/xdg")])
+		self.dataDirsPrefixed   = try   dataDirs.map{ try $0.lexicallyResolving(prefixAll).lexicallyNormalized() }
+		self.configDirsPrefixed = try configDirs.map{ try $0.lexicallyResolving(prefixAll).lexicallyNormalized() }
 		
 		self.binDir = home.map{ $0.appending(".local/bin") }
 		
@@ -151,6 +168,12 @@ public struct BaseDirectories : Sendable {
 			 * Extract from <https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html>, 2023-01-13. */
 			return .success(dirPath)
 		}()
+		/* We use force-unwrap because we are guaranteed the lexicallyResolving method will not fail as it has not failed previously in the init.
+		 * After the “unsafe” init, there’s the safe version, which requires changing the type of runtimeDirPrefixed to have a generic Error instead of XDGError.RuntimeDirError. */
+		self.runtimeDirPrefixed = runtimeDir.map{ $0.lexicallyResolving(prefixAll)!.lexicallyResolving(prefixUser)!.lexicallyNormalized() }
+//		self.runtimeDirPrefixed = runtimeDir
+//			.mapError{ $0 as Error }
+//			.flatMap{ d in Result{ try d.lexicallyResolving(prefixAll).lexicallyResolving(prefixUser).lexicallyNormalized() } }
 	}
 	
 	private static func absolutePath(from envVar: String) -> FilePath? {

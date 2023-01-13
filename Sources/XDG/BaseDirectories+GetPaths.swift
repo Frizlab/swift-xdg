@@ -17,19 +17,19 @@ import SystemPackage
 public extension BaseDirectories {
 	
 	func configFilePath(for path: FilePath) throws -> FilePath {
-		return try configHome.lexicallyResolving(userPrefix).lexicallyResolving(path)
+		return try configHomePrefixed.lexicallyResolving(path)
 	}
 	
 	func dataFilePath(for path: FilePath) throws -> FilePath {
-		return try dataHome.lexicallyResolving(userPrefix).lexicallyResolving(path)
+		return try dataHomePrefixed.lexicallyResolving(path)
 	}
 	
 	func cacheFilePath(for path: FilePath) throws -> FilePath {
-		return try cacheHome.lexicallyResolving(userPrefix).lexicallyResolving(path)
+		return try cacheHomePrefixed.lexicallyResolving(path)
 	}
 	
 	func stateFilePath(for path: FilePath) throws -> FilePath {
-		return try stateHome.lexicallyResolving(userPrefix).lexicallyResolving(path)
+		return try stateHomePrefixed.lexicallyResolving(path)
 	}
 	
 	/**
@@ -37,7 +37,7 @@ public extension BaseDirectories {
 	 
 	 - Throws: If there was an error retrieving the runtime dir during the init of the `BaseDirectories` (checks for permissions and co are only done at init). */
 	func runtimeFilePath(for path: FilePath) throws -> FilePath {
-		return try runtimeDir.get().lexicallyResolving(userPrefix).lexicallyResolving(path)
+		return try runtimeDirPrefixed.get().lexicallyResolving(path)
 	}
 	
 }

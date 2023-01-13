@@ -14,36 +14,31 @@ import SystemPackage
 
 
 
+/* If merging of files is supported and you need all of the files for the given path. */
 public extension BaseDirectories {
 	
-	func findConfigFile(_ path: FilePath) throws -> FilePath? {
-		return try find(path, in: configHome, and: configDirs)
+	func findConfigFiles(for path: FilePath) throws -> [FilePath] {
+		return try Array(findAll(path, in: [configHomePrefixed] + configDirsPrefixed))
 	}
 	
-	func findDataFile(_ path: FilePath) throws -> FilePath? {
-		return try find(path, in: dataHome, and: dataDirs)
+	func findDataFiles(_ path: FilePath) throws -> [FilePath] {
+		return try Array(findAll(path, in: [dataHomePrefixed] + dataDirsPrefixed))
 	}
 	
-	func findCacheFile(_ path: FilePath) throws -> FilePath? {
-		return try find(path, in: cacheHome)
+	func findCacheFiles(_ path: FilePath) throws -> [FilePath] {
+		return try Array(findAll(path, in: [cacheHomePrefixed]))
 	}
 	
-	func findStateFile(_ path: FilePath) throws -> FilePath? {
-		return try find(path, in: stateHome)
+	func findStateFiles(_ path: FilePath) throws -> [FilePath] {
+		return try Array(findAll(path, in: [stateHomePrefixed]))
 	}
 	
-	func findRuntimeFile(_ path: FilePath) throws -> FilePath? {
-		return try find(path, in: runtimeDir.get())
+	func findRuntimeFiles(_ path: FilePath) throws -> [FilePath] {
+		return try Array(findAll(path, in: [runtimeDirPrefixed.get()]))
 	}
 	
-	private func find(_ searched: FilePath, in base: FilePath, and other: [FilePath] = []) throws -> FilePath? {
-		let p1: FilePath = try base.lexicallyResolving(userPrefix).lexicallyResolving(searched)
-		if p1.existsNotDir(with: fileManager) {
-			return p1
-		}
-		return try other.first(where: {
-			try $0.lexicallyResolving(sharedPrefix).lexicallyResolving(searched).existsNotDir(with: fileManager)
-		})
+	internal func findAll(_ searched: FilePath, in candidates: [FilePath]) throws -> some Collection<FilePath> {
+		return try candidates.map{ try $0.lexicallyResolving(searched) }.lazy.filter{ $0.existsNotDir(with: fileManager) }
 	}
 	
 }
