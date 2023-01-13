@@ -102,7 +102,7 @@ public struct BaseDirectories : Sendable {
 		return path
 	}
 	
-	/** Always returns a non-empty array. */
+	/** Always returns a non-empty array if return value is non-nil. */
 	private static func absolutePaths(from envVar: String) -> [FilePath]? {
 		guard let pathsStr = (getenv(envVar).flatMap{ String(cString: $0) }) else {
 			return nil
