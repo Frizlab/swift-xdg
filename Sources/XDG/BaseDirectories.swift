@@ -38,6 +38,7 @@ public struct BaseDirectories : Sendable {
 			throw Err.cannotGetHomeOfUser
 #endif
 		}
+		
 		self.dataHome   = try Self.absolutePath(from: "XDG_DATA_HOME")   ?? home.get().appending(".local/share")
 		self.configHome = try Self.absolutePath(from: "XDG_CONFIG_HOME") ?? home.get().appending(".config")
 		self.cacheHome  = try Self.absolutePath(from: "XDG_CACHE_HOME")  ?? home.get().appending(".cache")
