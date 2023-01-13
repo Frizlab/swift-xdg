@@ -30,7 +30,7 @@ public struct XDGDirectories : Sendable {
 		let home = Result<FilePath, Error>{
 			/* I’ll not add the UnwrapOrThrow dependency just for a one time use, but this is tempting; I’d even be clearer w/ it probably… */
 #if !os(tvOS) && !os(iOS) && !os(watchOS)
-			guard let ret = FilePath(fileManager.homeDirectoryForCurrentUser) else {
+			guard let ret = FilePath(urlForceLocalImplementation: fileManager.homeDirectoryForCurrentUser) else {
 				throw Err.cannotGetHomeOfUser
 			}
 			return ret

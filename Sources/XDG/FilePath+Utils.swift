@@ -18,12 +18,17 @@ extension FilePath {
 	
 #if !canImport(System)
 	init?(_ url: URL) {
+		self(urlForceLocalImplementation: url)
+	}
+#endif
+	
+	/* In certain situations (custom toolchain), even on macOS where System can be imported, FilePath.init(_ url:) might not exist… */
+	init?(urlForceLocalImplementation url: URL) {
 		guard url.isFileURL else {
 			return nil
 		}
 		self.init(url.path)
 	}
-#endif
 	
 	var url: URL {
 		/* For now we do not consider Windows. */
