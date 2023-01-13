@@ -43,4 +43,16 @@ extension FilePath {
 #endif
 	}
 	
+	/* Returns self for convenience. */
+	func ensureExistingParent(with fileManager: FileManager) throws -> Self {
+		try removingLastComponent().ensureExistingDir(with: fileManager)
+		return self
+	}
+	
+	/* Returns self for convenience. */
+	func ensureExistingDir(with fileManager: FileManager) throws -> Self {
+		try fileManager.createDirectory(atPath: string, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+		return self
+	}
+	
 }
