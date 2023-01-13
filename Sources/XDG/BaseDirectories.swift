@@ -27,12 +27,16 @@ public struct BaseDirectories : Sendable {
 	public var runtimeDir: Result<FilePath, XDGError.RuntimeDirError>?
 	
 	public init(setupRuntimeDir: Bool = false, fileManager: FileManager = .default) throws {
-		let home = Result{
+		let home = Result<FilePath, Error>{
 			/* I’ll not add the UnwrapOrThrow dependency just for a one time use, but this is tempting; I’d even be clearer w/ it probably… */
+#if !os(tvOS) && !os(iOS) && !os(watchOS)
 			guard let ret = FilePath(fileManager.homeDirectoryForCurrentUser) else {
 				throw Err.cannotGetHomeOfUser
 			}
 			return ret
+#else
+			throw Err.cannotGetHomeOfUser
+#endif
 		}
 		self.dataHome   = try Self.absolutePath(from: "XDG_DATA_HOME")   ?? home.get().appending(".local/share")
 		self.configHome = try Self.absolutePath(from: "XDG_CONFIG_HOME") ?? home.get().appending(".config")

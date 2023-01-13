@@ -16,10 +16,7 @@ import Foundation
 
 public enum XDGError : Error, Sendable {
 	
-	/**
-	 We get the home directory from FileManager, which returns a URL for the current user directory.
-	 The user can technically not be a file URL.
-	 This should not happen. */
+	/** The OS does not support home directory, etc. */
 	case cannotGetHomeOfUser
 	
 	public enum RuntimeDirError : Error, Sendable {

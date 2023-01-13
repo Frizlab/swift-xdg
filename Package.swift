@@ -12,10 +12,10 @@ let commonSwiftSettings: [SwiftSetting] = [
 let package = Package(
 	name: "swift-xdg",
 	platforms: [
-		.macOS(.v12), /* File path exists on macOS 11, but is unusable. */
-		.tvOS(.v14),
-		.iOS(.v14),
-		.watchOS(.v7)
+		.macOS(.v12), /* FilePath exists on macOS 11,  but it is unusable. */
+		.tvOS(.v15),  /* FilePath exists on tvOS 14,   but it is unusable. */
+		.iOS(.v15),   /* FilePath exists on iOS 14,    but it is unusable. */
+		.watchOS(.v8) /* FilePath exists on watchOS 7, but it is unusable. */
 	],
 	products: {
 		var ret = [Product]()
