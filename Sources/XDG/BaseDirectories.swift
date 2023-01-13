@@ -14,45 +14,106 @@ import Foundation
 
 
 
+/* We cheat a _little_ bit.
+ * Doc says clearly FileManager is thread-safe.
+ * I think they did not make it Sendable because:
+ *  1. It’s open;
+ *  2. There might be a possibility of issue with the delegate? */
+extension FileManager : @unchecked Sendable {}
+
+/* Based on <https://specifications.freedesktop.org/basedir-spec/basedir-spec-0.8.html>. */
 public struct BaseDirectories : Sendable {
 	
-	public var   dataHome: FilePath
-	public var configHome: FilePath
-	public var  cacheHome: FilePath
-	public var  stateHome: FilePath
-	
-	public var   dataDirs: [FilePath]
-	public var configDirs: [FilePath]
-	
-	public var runtimeDir: Result<FilePath, XDGError.RuntimeDirError>?
-	
-	public init(setupRuntimeDir: Bool = false, fileManager: FileManager = .default) throws {
-		let home = Result<FilePath, Error>{
-			/* I’ll not add the UnwrapOrThrow dependency just for a one time use, but this is tempting; I’d even be clearer w/ it probably… */
-#if !os(tvOS) && !os(iOS) && !os(watchOS)
-			guard let ret = FilePath(urlForceLocalImplementation: fileManager.homeDirectoryForCurrentUser) else {
-				throw Err.cannotGetHomeOfUser
-			}
-			return ret
-#else
-			throw Err.cannotGetHomeOfUser
-#endif
+	public enum RuntimeDirHandling {
+		
+		case skipSetup
+		/* We ask for a handler to log something if the default value is used for the runtime directory because
+		 *  the specs mandate a log should be shown somehow if the runtime dir env is not set and is needed. */
+		case setup(defaultIfUndefined: FilePath?, logIfDefaultUsed: () -> Void)
+		
+		public static var `default`: Self {
+			return .setup(defaultIfUndefined: nil, logIfDefaultUsed: { })
 		}
 		
-		self.dataHome   = try Self.absolutePath(from: "XDG_DATA_HOME")   ?? home.get().appending(".local/share")
-		self.configHome = try Self.absolutePath(from: "XDG_CONFIG_HOME") ?? home.get().appending(".config")
-		self.cacheHome  = try Self.absolutePath(from: "XDG_CACHE_HOME")  ?? home.get().appending(".cache")
-		self.stateHome  = try Self.absolutePath(from: "XDG_STATE_HOME")  ?? home.get().appending(".local/state")
+	}
+	
+	public let fileManager: FileManager
+	
+	public let sharedPrefix: FilePath
+	public let userPrefix:   FilePath
+	
+	public let   dataHome: FilePath
+	public let configHome: FilePath
+	public let  cacheHome: FilePath
+	public let  stateHome: FilePath
+	
+	public let   dataDirs: [FilePath]
+	public let configDirs: [FilePath]
+	
+	public let runtimeDir: Result<FilePath, XDGError.RuntimeDirError>
+	
+	/**
+	 The path in which to store the binaries; should only be used by installers…
+	 
+	 This is always `~/.local/bin`. */
+	public let binDir: Result<FilePath, XDGError>
+	
+	/**
+	 Init a `BaseDirectories` instance by reading the environment variables and setting the different path according to the specifications.
+	 
+	 If set, `prefix` will be prepended to every path that is looked up.
+	 If set, `profile` will be prepended in addition to the prefix for every path that is looked up, but only for user-specific directories.
+	 
+	 For example:
+	 ```swift
+	 let dirs = try BaseDirectories(prefix: "program-name", profile: "profile-name")
+	 dirs.findDataFile("bar.jpg")
+	 dirs.findConfigFile("foo.conf")
+	 ```
+	 will find `/usr/share/program-name/bar.jpg` (without `profile-name`) and and `~/.config/program-name/profile-name/foo.conf`.
+	 
+	 No effort is done on prefix and profile to make sure they do not escape the folders they’re assigned to.
+	 In particular there are no checks for ".." components, etc., and setting the variable to absolute paths **will** escape. */
+	public init(prefix: FilePath = "", profile: FilePath = "", runtimeDirHandling: RuntimeDirHandling = .default, fileManager: FileManager = .default) throws {
+		let home: Result<FilePath, XDGError> = {
+#if !os(tvOS) && !os(iOS) && !os(watchOS)
+			guard let ret = FilePath(urlForceLocalImplementation: fileManager.homeDirectoryForCurrentUser) else {
+				return .failure(Err.cannotGetHomeOfUser)
+			}
+			return .success(ret)
+#else
+			return .failure(Err.cannotGetHomeOfUser)
+#endif
+		}()
 		
-		self.dataDirs   = Self.absolutePaths(from: "XDG_DATA_DIRS")   ?? [FilePath("/usr/local/share"), FilePath("/usr/share")]
-		self.configDirs = Self.absolutePaths(from: "XDG_CONFIG_DIRS") ?? [FilePath("/etc/xdg")]
+		self.fileManager = fileManager
+		
+		self.sharedPrefix = prefix
+		self.userPrefix   = prefix.pushing(profile)
+		
+		self.dataHome   = try (Self.absolutePath(from: "XDG_DATA_HOME")   ?? home.get().pushing(".local/share")).lexicallyNormalized()
+		self.configHome = try (Self.absolutePath(from: "XDG_CONFIG_HOME") ?? home.get().pushing(".config")     ).lexicallyNormalized()
+		self.cacheHome  = try (Self.absolutePath(from: "XDG_CACHE_HOME")  ?? home.get().pushing(".cache")      ).lexicallyNormalized()
+		self.stateHome  = try (Self.absolutePath(from: "XDG_STATE_HOME")  ?? home.get().pushing(".local/state")).lexicallyNormalized()
+		
+		self.dataDirs   = (Self.absolutePaths(from: "XDG_DATA_DIRS")   ?? [FilePath("/usr/local/share"), FilePath("/usr/share")]).map{ $0.lexicallyNormalized() }
+		self.configDirs = (Self.absolutePaths(from: "XDG_CONFIG_DIRS") ?? [FilePath("/etc/xdg")]                                ).map{ $0.lexicallyNormalized() }
+		
+		self.binDir = home.map{ $0.pushing(".local/bin") }
 		
 		self.runtimeDir = {
-			guard setupRuntimeDir else {
+			guard case let .setup(defaultIfUndefined: defaultPath, logIfDefaultUsed: logIfDefaultUsed) = runtimeDirHandling else {
 				return .failure(.setupSkipped)
 			}
-			guard let dirPath = Self.absolutePath(from: "XDG_RUNTIME_DIR") else {
-				return nil
+			let dirPath: FilePath
+			if let path = Self.absolutePath(from: "XDG_RUNTIME_DIR") {
+				dirPath = path.lexicallyNormalized()
+			} else {
+				guard let defaultPath else {
+					return .failure(.runtimeDirEnvIsUndefined)
+				}
+				logIfDefaultUsed()
+				dirPath = defaultPath.lexicallyNormalized()
 			}
 			var isDir = ObjCBool(false)
 			guard fileManager.fileExists(atPath: dirPath.string, isDirectory: &isDir), isDir.boolValue else {

@@ -14,7 +14,7 @@ import XCTest
 
 final class XDGTests : XCTestCase {
 	
-	func testNothing() {
+	func testNothing() throws {
 	}
 	
 }

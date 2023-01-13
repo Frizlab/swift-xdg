@@ -19,11 +19,15 @@ public enum XDGError : Error, Sendable {
 	/** The OS does not support home directory, etc. */
 	case cannotGetHomeOfUser
 	
+	case fileFoundExpectedDirectory(FilePath)
+	
 	public enum RuntimeDirError : Error, Sendable {
 		
 		case setupSkipped
 		
-		case runtimeDirIsMissing
+		/* If RuntimeDirHandling is set to setup with a non-nil default value, this case does not happen. */
+		case runtimeDirEnvIsUndefined
+		
 		case runtimeDirIsNotADirectory(FilePath)
 		case failedReadingRuntimeDirAttributes(FilePath)
 		case runtimeDirIsNotOwnedByCurrentUser(FilePath, owner: String)
