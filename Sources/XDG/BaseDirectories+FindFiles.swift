@@ -16,33 +16,33 @@ import SystemPackage
 
 public extension BaseDirectories {
 	
-	func findConfigFile(_ path: FilePath) -> FilePath? {
-		return find(path, in: configHome, and: configDirs)
+	func findConfigFile(_ path: FilePath) throws -> FilePath? {
+		return try find(path, in: configHome, and: configDirs)
 	}
 	
-	func findDataFile(_ path: FilePath) -> FilePath? {
-		return find(path, in: dataHome, and: dataDirs)
+	func findDataFile(_ path: FilePath) throws -> FilePath? {
+		return try find(path, in: dataHome, and: dataDirs)
 	}
 	
-	func findCacheFile(_ path: FilePath) -> FilePath? {
-		return find(path, in: cacheHome)
+	func findCacheFile(_ path: FilePath) throws -> FilePath? {
+		return try find(path, in: cacheHome)
 	}
 	
-	func findStateFile(_ path: FilePath) -> FilePath? {
-		return find(path, in: stateHome)
+	func findStateFile(_ path: FilePath) throws -> FilePath? {
+		return try find(path, in: stateHome)
 	}
 	
 	func findRuntimeFile(_ path: FilePath) throws -> FilePath? {
 		return try find(path, in: runtimeDir.get())
 	}
 	
-	private func find(_ searched: FilePath, in base: FilePath, and other: [FilePath] = []) -> FilePath? {
-		let p1 = base.pushing(userPrefix).pushing(searched)
+	private func find(_ searched: FilePath, in base: FilePath, and other: [FilePath] = []) throws -> FilePath? {
+		let p1: FilePath = try base.lexicallyResolving(userPrefix).lexicallyResolving(searched)
 		if p1.existsNotDir(with: fileManager) {
 			return p1
 		}
-		return other.first(where: {
-			$0.pushing(sharedPrefix).pushing(searched).existsNotDir(with: fileManager)
+		return try other.first(where: {
+			try $0.lexicallyResolving(sharedPrefix).lexicallyResolving(searched).existsNotDir(with: fileManager)
 		})
 	}
 	

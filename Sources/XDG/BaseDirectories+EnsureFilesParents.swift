@@ -18,22 +18,22 @@ public extension BaseDirectories {
 	
 	/** Make sure the folders leading to the config file path exist and return it. */
 	func ensureParentsForConfigFilePath(_ path: FilePath) throws -> FilePath {
-		return try configHome.pushing(userPrefix).pushing(path).ensureExistingParent(with: fileManager)
+		return try configHome.lexicallyResolving(userPrefix).lexicallyResolving(path).ensureExistingParent(with: fileManager)
 	}
 	
 	/** Make sure the folders leading to the data file path exist and return it. */
 	func ensureParentsForDataFilePath(_ path: FilePath) throws -> FilePath {
-		return try dataHome.pushing(userPrefix).pushing(path).ensureExistingParent(with: fileManager)
+		return try dataHome.lexicallyResolving(userPrefix).lexicallyResolving(path).ensureExistingParent(with: fileManager)
 	}
 	
 	/** Make sure the folders leading to the cache file path exist and return it. */
 	func ensureParentsForCacheFilePath(_ path: FilePath) throws -> FilePath {
-		return try cacheHome.pushing(userPrefix).pushing(path).ensureExistingParent(with: fileManager)
+		return try cacheHome.lexicallyResolving(userPrefix).lexicallyResolving(path).ensureExistingParent(with: fileManager)
 	}
 	
 	/** Make sure the folders leading to the state file path exist and return it. */
 	func ensureParentsForStateFilePath(_ path: FilePath) throws -> FilePath {
-		return try stateHome.pushing(userPrefix).pushing(path).ensureExistingParent(with: fileManager)
+		return try stateHome.lexicallyResolving(userPrefix).lexicallyResolving(path).ensureExistingParent(with: fileManager)
 	}
 	
 	/**
@@ -41,7 +41,7 @@ public extension BaseDirectories {
 	 
 	 - Throws: If there was an error retrieving the runtime dir during the init of the `BaseDirectories` (checks for permissions and co are only done at init). */
 	func ensureParentsForRuntimeFilePath(_ path: FilePath) throws -> FilePath {
-		return try runtimeDir.get().pushing(userPrefix).pushing(path).ensureExistingParent(with: fileManager)
+		return try runtimeDir.get().lexicallyResolving(userPrefix).lexicallyResolving(path).ensureExistingParent(with: fileManager)
 	}
 	
 }

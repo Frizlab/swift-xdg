@@ -59,4 +59,11 @@ extension FilePath {
 		return (fileManager.fileExists(atPath: string, isDirectory: &isDir) && !isDir.boolValue)
 	}
 	
+	func lexicallyResolving(_ subpath: FilePath) throws -> FilePath {
+		guard let ret = lexicallyResolving(subpath) else {
+			throw Err.pathGoesOut
+		}
+		return ret
+	}
+	
 }

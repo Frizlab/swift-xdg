@@ -40,7 +40,7 @@ public struct BaseDirectories : Sendable {
 	public let fileManager: FileManager
 	
 	public let sharedPrefix: FilePath
-	public let userPrefix:   FilePath
+	public let   userPrefix: FilePath
 	
 	public let   dataHome: FilePath
 	public let configHome: FilePath
@@ -70,10 +70,7 @@ public struct BaseDirectories : Sendable {
 	 dirs.findDataFile("bar.jpg")
 	 dirs.findConfigFile("foo.conf")
 	 ```
-	 will find `/usr/share/program-name/bar.jpg` (without `profile-name`) and and `~/.config/program-name/profile-name/foo.conf`.
-	 
-	 No effort is done on prefix and profile to make sure they do not escape the folders they’re assigned to.
-	 In particular there are no checks for ".." components, etc., and setting the variable to absolute paths **will** escape. */
+	 will find `/usr/share/program-name/bar.jpg` (without `profile-name`) and and `~/.config/program-name/profile-name/foo.conf`. */
 	public init(prefix: FilePath = "", profile: FilePath = "", runtimeDirHandling: RuntimeDirHandling = .default, fileManager: FileManager = .default) throws {
 		let home: Result<FilePath, XDGError> = {
 #if !os(tvOS) && !os(iOS) && !os(watchOS)
@@ -89,17 +86,17 @@ public struct BaseDirectories : Sendable {
 		self.fileManager = fileManager
 		
 		self.sharedPrefix = prefix
-		self.userPrefix   = prefix.pushing(profile)
+		self.userPrefix   = prefix.appending(profile.components)
 		
-		self.dataHome   = try (Self.absolutePath(from: "XDG_DATA_HOME")   ?? home.get().pushing(".local/share")).lexicallyNormalized()
-		self.configHome = try (Self.absolutePath(from: "XDG_CONFIG_HOME") ?? home.get().pushing(".config")     ).lexicallyNormalized()
-		self.cacheHome  = try (Self.absolutePath(from: "XDG_CACHE_HOME")  ?? home.get().pushing(".cache")      ).lexicallyNormalized()
-		self.stateHome  = try (Self.absolutePath(from: "XDG_STATE_HOME")  ?? home.get().pushing(".local/state")).lexicallyNormalized()
+		self.dataHome   = try (Self.absolutePath(from: "XDG_DATA_HOME")   ?? home.get().appending(".local/share")).lexicallyNormalized()
+		self.configHome = try (Self.absolutePath(from: "XDG_CONFIG_HOME") ?? home.get().appending(".config")     ).lexicallyNormalized()
+		self.cacheHome  = try (Self.absolutePath(from: "XDG_CACHE_HOME")  ?? home.get().appending(".cache")      ).lexicallyNormalized()
+		self.stateHome  = try (Self.absolutePath(from: "XDG_STATE_HOME")  ?? home.get().appending(".local/state")).lexicallyNormalized()
 		
 		self.dataDirs   = (Self.absolutePaths(from: "XDG_DATA_DIRS")   ?? [FilePath("/usr/local/share"), FilePath("/usr/share")]).map{ $0.lexicallyNormalized() }
 		self.configDirs = (Self.absolutePaths(from: "XDG_CONFIG_DIRS") ?? [FilePath("/etc/xdg")]                                ).map{ $0.lexicallyNormalized() }
 		
-		self.binDir = home.map{ $0.pushing(".local/bin") }
+		self.binDir = home.map{ $0.appending(".local/bin") }
 		
 		self.runtimeDir = {
 			guard case let .setup(defaultIfUndefined: defaultPath, logIfDefaultUsed: logIfDefaultUsed) = runtimeDirHandling else {

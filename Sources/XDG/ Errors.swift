@@ -19,6 +19,12 @@ public enum XDGError : Error, Sendable {
 	/** The OS does not support home directory, etc. */
 	case cannotGetHomeOfUser
 	
+	/**
+	 This happens when the search or given relative path would make the resulting path go out of its relative source.
+	 
+	 If you search for the configuration file `../yolo.toml`, you will get this error as going outside the configuration dir is not allowed (at least by this XDG base dirs implementation). */
+	case pathGoesOut
+	
 	case fileFoundExpectedDirectory(FilePath)
 	
 	public enum RuntimeDirError : Error, Sendable {
