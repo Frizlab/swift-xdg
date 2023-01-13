@@ -17,22 +17,22 @@ import SystemPackage
 public extension BaseDirectories {
 	
 	/** Make sure the folders leading to the config file path exist and return it. */
-	func ensureParentsForConfigFilePath(for path: FilePath) throws -> FilePath {
+	func ensureParentsForConfigFilePath(_ path: FilePath) throws -> FilePath {
 		return try configHome.pushing(userPrefix).pushing(path).ensureExistingParent(with: fileManager)
 	}
 	
 	/** Make sure the folders leading to the data file path exist and return it. */
-	func ensureParentsForDataFilePath(for path: FilePath) throws -> FilePath {
+	func ensureParentsForDataFilePath(_ path: FilePath) throws -> FilePath {
 		return try dataHome.pushing(userPrefix).pushing(path).ensureExistingParent(with: fileManager)
 	}
 	
 	/** Make sure the folders leading to the cache file path exist and return it. */
-	func ensureParentsForCacheFilePath(for path: FilePath) throws -> FilePath {
+	func ensureParentsForCacheFilePath(_ path: FilePath) throws -> FilePath {
 		return try cacheHome.pushing(userPrefix).pushing(path).ensureExistingParent(with: fileManager)
 	}
 	
 	/** Make sure the folders leading to the state file path exist and return it. */
-	func ensureParentsForStateFilePath(for path: FilePath) throws -> FilePath {
+	func ensureParentsForStateFilePath(_ path: FilePath) throws -> FilePath {
 		return try stateHome.pushing(userPrefix).pushing(path).ensureExistingParent(with: fileManager)
 	}
 	
@@ -40,7 +40,7 @@ public extension BaseDirectories {
 	 Make sure the folders leading to the runtime file path exist and return it.
 	 
 	 - Throws: If there was an error retrieving the runtime dir during the init of the `BaseDirectories` (checks for permissions and co are only done at init). */
-	func ensureParentsForRuntimeFilePath(for path: FilePath) throws -> FilePath {
+	func ensureParentsForRuntimeFilePath(_ path: FilePath) throws -> FilePath {
 		return try runtimeDir.get().pushing(userPrefix).pushing(path).ensureExistingParent(with: fileManager)
 	}
 	

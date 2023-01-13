@@ -163,17 +163,17 @@ public struct BaseDirectories : Sendable {
 		return path
 	}
 	
-	/** Always returns a non-empty array if return value is non-nil. */
+	/* If the envVar contains only colons, this will return an empty array.
+	 * If envVar is empty, `nil` is returned. */
 	private static func absolutePaths(from envVar: String) -> [FilePath]? {
-		guard let pathsStr = (getenv(envVar).flatMap{ String(cString: $0) }) else {
+		guard let pathsStr = (getenv(envVar).flatMap{ String(cString: $0) }), !pathsStr.isEmpty else {
 			return nil
 		}
-		let paths = pathsStr.split(separator: ":").compactMap{
+		return pathsStr.split(separator: ":").compactMap{
 			let str = String($0)
 			let path = FilePath(str)
 			return (path.isAbsolute ? path : nil)
 		}
-		return (!paths.isEmpty ? paths : nil)
 	}
 	
 }

@@ -45,14 +45,18 @@ extension FilePath {
 	
 	/* Returns self for convenience. */
 	func ensureExistingParent(with fileManager: FileManager) throws -> Self {
-		try removingLastComponent().ensureExistingDir(with: fileManager)
-		return self
+		return try removingLastComponent().ensureExistingDir(with: fileManager)
 	}
 	
 	/* Returns self for convenience. */
 	func ensureExistingDir(with fileManager: FileManager) throws -> Self {
 		try fileManager.createDirectory(atPath: string, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
 		return self
+	}
+	
+	func existsNotDir(with fileManager: FileManager) -> Bool {
+		var isDir = ObjCBool(true)
+		return (fileManager.fileExists(atPath: string, isDirectory: &isDir) && !isDir.boolValue)
 	}
 	
 }
