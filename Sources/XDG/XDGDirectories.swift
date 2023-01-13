@@ -1,5 +1,5 @@
 /*
- * BaseDirectories.swift
+ * XDGDirectories.swift
  * swift-xdg
  *
  * Created by François Lamboley on 2023/01/13.
@@ -14,7 +14,7 @@ import Foundation
 
 
 
-public struct BaseDirectories : Sendable {
+public struct XDGDirectories : Sendable {
 	
 	public var   dataHome: FilePath
 	public var configHome: FilePath
