@@ -15,6 +15,8 @@ import XCTest
 final class XDGTests : XCTestCase {
 	
 	func testNothing() throws {
+//		let dirs = try BaseDirectories(prefix: "officectl")
+//		try print(dirs.findConfigFile("officectl.yaml"))
 	}
 	
 }
