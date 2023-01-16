@@ -34,7 +34,7 @@ let package = Package(
 		ret.append(.target(name: "XDG", dependencies: {
 			var ret = [Target.Dependency]()
 #if !canImport(System)
-			ret.append(.product(name: "SystemPackage",  package: "swift-system"))
+			ret.append(.product(name: "SystemPackage", package: "swift-system"))
 #endif
 			return ret
 		}(), swiftSettings: commonSwiftSettings))
