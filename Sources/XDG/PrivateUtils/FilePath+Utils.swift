@@ -18,7 +18,7 @@ extension FilePath {
 	
 #if !canImport(System)
 	init?(_ url: URL) {
-		self(urlForceLocalImplementation: url)
+		self.init(urlForceLocalImplementation: url)
 	}
 #endif
 	
