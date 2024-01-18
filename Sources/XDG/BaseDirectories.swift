@@ -84,14 +84,17 @@ public struct BaseDirectories : Sendable {
 	 will find `/usr/share/program-name/bar.jpg` (without `profile-name`) and `~/.config/program-name/profile-name/foo.conf`. */
 	public init(prefixAll: FilePath = "", prefixUser: FilePath = "", runtimeDirHandling: RuntimeDirHandling = .default, fileManager: FileManager = .default) throws {
 		let home: Result<FilePath, XDGError> = {
+			let homeDirectory: URL
 #if !os(tvOS) && !os(iOS) && !os(watchOS)
-			guard let ret = FilePath(urlForceLocalImplementation: fileManager.homeDirectoryForCurrentUser) else {
+			/* Note: We probably could’ve used NSHomeDirectory for macOS too. */
+			homeDirectory = fileManager.homeDirectoryForCurrentUser
+#else
+			homeDirectory = URL(fileURLWithPath: NSHomeDirectory())
+#endif
+			guard let ret = FilePath(urlForceLocalImplementation: homeDirectory) else {
 				return .failure(Err.cannotGetHomeOfUser)
 			}
 			return .success(ret)
-#else
-			return .failure(Err.cannotGetHomeOfUser)
-#endif
 		}()
 		
 		self.fileManager = fileManager
