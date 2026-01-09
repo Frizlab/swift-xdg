@@ -10,11 +10,17 @@ extension FilePath {
 		guard url.isFileURL else {
 			return nil
 		}
+#if canImport(Darwin)
 		if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
 			self.init(url.path(percentEncoded: false))
 		} else {
 			self.init(url.path)
 		}
+#elseif swift(>=6.0)
+		self.init(url.path(percentEncoded: false))
+#else
+		self.init(url.path)
+#endif
 	}
 	
 	/* Returns self for convenience. */
