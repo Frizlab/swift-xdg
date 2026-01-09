@@ -28,6 +28,7 @@ public extension BaseDirectories {
 	}
 	
 	internal func findAll(_ searched: FilePath, in candidates: [FilePath]) throws -> some Collection<FilePath> {
+		let fileManager = fileManagerFactory()
 		return try candidates.map{ try $0.lexicallyResolving(searched) }.lazy.filter{ $0.existsNotDir(with: fileManager) }
 	}
 	

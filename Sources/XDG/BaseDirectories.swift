@@ -4,13 +4,6 @@ import SystemPackage
 
 
 
-/* We cheat a _little_ bit.
- * Doc says clearly FileManager is thread-safe.
- * I think they did not make it Sendable because:
- *  1. It’s open;
- *  2. There might be a possibility of issue with the delegate? */
-extension FileManager : @unchecked Sendable {}
-
 /* Based on <https://specifications.freedesktop.org/basedir-spec/basedir-spec-0.8.html>. */
 public struct BaseDirectories : Sendable {
 	
@@ -27,7 +20,8 @@ public struct BaseDirectories : Sendable {
 		
 	}
 	
-	public let fileManager: FileManager
+	/* We store a _factory_ to the file manager because FileManager is not Sendable. */
+	public let fileManagerFactory: @Sendable () -> FileManager
 	
 	public let   dataHome: FilePath
 	public let configHome: FilePath
@@ -72,7 +66,14 @@ public struct BaseDirectories : Sendable {
 	 dirs.findConfigFile("foo.conf")
 	 ```
 	 will find `/usr/share/program-name/bar.jpg` (without `profile-name`) and `~/.config/program-name/profile-name/foo.conf`. */
-	public init(prefixAll: FilePath = "", prefixUser: FilePath = "", runtimeDirHandling: RuntimeDirHandling = .default, fileManager: FileManager = .default) throws {
+	public init(
+		prefixAll: FilePath = "",
+		prefixUser: FilePath = "",
+		runtimeDirHandling: RuntimeDirHandling = .default,
+		fileManagerFactory: @escaping @Sendable () -> FileManager = { .default }
+	) throws {
+		let fileManager = fileManagerFactory()
+		
 		let home: Result<FilePath, XDGError> = {
 			let homeDirectory: URL
 #if !os(tvOS) && !os(iOS) && !os(watchOS)
@@ -87,7 +88,7 @@ public struct BaseDirectories : Sendable {
 			return .success(ret)
 		}()
 		
-		self.fileManager = fileManager
+		self.fileManagerFactory = fileManagerFactory
 		
 		self.prefixAll  = prefixAll
 		self.prefixUser = prefixUser
