@@ -10,7 +10,11 @@ extension FilePath {
 		guard url.isFileURL else {
 			return nil
 		}
-		self.init(url.path)
+		if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
+			self.init(url.path(percentEncoded: false))
+		} else {
+			self.init(url.path)
+		}
 	}
 	
 	/* Returns self for convenience. */
