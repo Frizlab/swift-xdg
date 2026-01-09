@@ -171,7 +171,7 @@ public struct BaseDirectories : Sendable {
 	}
 	
 	private static func absolutePath(from envVar: String) -> FilePath? {
-		guard let path = (getenv(envVar).flatMap{ FilePath(String(cString: $0)) }), path.isAbsolute else {
+		guard let path = ProcessInfo.processInfo.environment[envVar].map(FilePath.init(_:)), path.isAbsolute else {
 			return nil
 		}
 		return path
@@ -180,7 +180,7 @@ public struct BaseDirectories : Sendable {
 	/* If the envVar contains only colons, this will return an empty array.
 	 * If envVar is empty, `nil` is returned. */
 	private static func absolutePaths(from envVar: String) -> [FilePath]? {
-		guard let pathsStr = (getenv(envVar).flatMap{ String(cString: $0) }), !pathsStr.isEmpty else {
+		guard let pathsStr = ProcessInfo.processInfo.environment[envVar], !pathsStr.isEmpty else {
 			return nil
 		}
 		return pathsStr.split(separator: ":").compactMap{
