@@ -1,13 +1,12 @@
 import Foundation
-import Testing
+import XCTest
 
 @testable import XDG
 
 
 
-struct XDGTests {
+final class XDGTests : XCTestCase {
 	
-	@Test
 	func testNothing() throws {
 //		let dirs = try BaseDirectories(prefix: "officectl")
 //		try print(dirs.findConfigFile("officectl.yaml"))
