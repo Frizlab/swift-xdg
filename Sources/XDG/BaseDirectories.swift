@@ -76,7 +76,7 @@ public struct BaseDirectories : Sendable {
 		
 		let home: Result<FilePath, XDGError> = {
 			let homeDirectory: URL
-#if !os(tvOS) && !os(iOS) && !os(watchOS)
+#if !os(tvOS) && !os(iOS) && !os(watchOS) && !os(visionOS)
 			/* Note: We probably could’ve used NSHomeDirectory for macOS too. */
 			homeDirectory = fileManager.homeDirectoryForCurrentUser
 #else
