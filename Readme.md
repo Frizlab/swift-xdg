@@ -2,7 +2,7 @@
 
 Implementation of the XDG Base Directory Specification in Swift.
 
-This package has been largely inspired by [a Rust implementation](https://github.com/whitequark/rust-xdg/blob/main/src/lib.rs).
+This package has been largely inspired by [a Rust implementation](<https://github.com/whitequark/rust-xdg/blob/main/src/lib.rs>).
 
 ## Usage
 ```swift
