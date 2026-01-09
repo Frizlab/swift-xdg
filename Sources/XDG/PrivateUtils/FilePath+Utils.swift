@@ -25,7 +25,8 @@ extension FilePath {
 	
 	/* Returns self for convenience. */
 	func ensureExistingParent(with fileManager: FileManager) throws -> Self {
-		return try removingLastComponent().ensureExistingDir(with: fileManager)
+		_ = try removingLastComponent().ensureExistingDir(with: fileManager)
+		return self
 	}
 	
 	/* Returns self for convenience. */
