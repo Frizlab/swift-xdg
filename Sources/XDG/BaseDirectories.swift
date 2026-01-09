@@ -6,11 +6,8 @@
  */
 
 import Foundation
-#if canImport(System)
-@preconcurrency import System
-#else
-@preconcurrency import SystemPackage
-#endif
+
+import SystemPackage
 
 
 

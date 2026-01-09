@@ -6,21 +6,16 @@
  */
 
 import Foundation
-#if canImport(System)
-import System
-#else
+
 import SystemPackage
-#endif
 
 
 
 extension FilePath {
 	
-#if !canImport(System)
 	init?(_ url: URL) {
 		self.init(urlForceLocalImplementation: url)
 	}
-#endif
 	
 	/* In certain situations (custom toolchain), even on macOS where System can be imported, FilePath.init(_ url:) might not exist… */
 	init?(urlForceLocalImplementation url: URL) {
@@ -31,8 +26,7 @@ extension FilePath {
 	}
 	
 	var url: URL {
-		/* For now we do not consider Windows. */
-#if !os(Linux)
+#if canImport(Darwin)
 		if #available(macOS 13.0, tvOS 16.0, iOS 16.0, watchOS 9.0, *) {
 			return URL(filePath: string)
 		} else {
